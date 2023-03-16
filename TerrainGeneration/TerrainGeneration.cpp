@@ -140,8 +140,9 @@ void shaderCompileTest(GLuint shader)
 void setup(void)
 {
 	float h1, h2, h3, h4, avarage, h;
+	
 	///Generate random numbers ///
-	srand(3); // get different srand values //seed
+	srand(3); //Seed
 	h1 = (rand() % 10) / 5.0 - 1.0;
 	h2 = (rand() % 10) / 5.0 - 1.0;
 	h3 = (rand() % 10) / 5.0 - 1.0;
@@ -348,8 +349,6 @@ void setup(void)
 		terrainVertices[i].normals = norVec;
 	}
 
-	
-	
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 
 	// Create shader program executable - read, compile and link shaders
@@ -399,7 +398,6 @@ void setup(void)
 	glUniform4fv(glGetUniformLocation(programId, "light0.coords"), 1,
 		&light0.coords[0]);
 
-
 	// Create vertex array object (VAO) and vertex buffer object (VBO) and associate data with vertex shader.
 	glGenVertexArrays(1, vao);
 	glGenBuffers(1, buffer);
@@ -411,7 +409,6 @@ void setup(void)
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(terrainVertices[0]), (GLvoid*)sizeof(terrainVertices[0].normals));
 	glEnableVertexAttribArray(1);
-	///////////////////////////////////////
 
 	// Obtain projection matrix uniform location and set value.
 	projMatLoc = glGetUniformLocation(programId, "projMat");
@@ -422,9 +419,7 @@ void setup(void)
 
 	// Obtain modelview matrix uniform location and set value.
 	mat4 modelViewMat = mat4(1.0);
-	// Move terrain into view - glm::translate replaces glTranslatef
-	//modelViewMat = translate(modelViewMat, vec3(-2.5f, -2.5f, -10.0f)); // 5x5 grid
-	modelViewMat = translate(modelViewMat, vec3(-5.0f, -5.0f, -50.0f)); // 5x5 grid
+	modelViewMat = translate(modelViewMat, vec3(-15.0f, -3.0f, -55.0f)); // <-- TERRAIN IN VIEW.
 	modelViewMatLoc = glGetUniformLocation(programId, "modelViewMat");
 	glUniformMatrix4fv(modelViewMatLoc, 1, GL_FALSE, value_ptr(modelViewMat));
 
@@ -433,6 +428,9 @@ void setup(void)
 	normalMat = transpose(inverse(mat3(modelViewMat)));
 	glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, value_ptr(normalMat));
 
+	// Apparently with Instructions this Increases Efficiency of Cull back faces of the Terrain are not rendered.. (I have no idea what that means, but I will pretend that I do).
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	//GLenum error = glGetError();
 }
