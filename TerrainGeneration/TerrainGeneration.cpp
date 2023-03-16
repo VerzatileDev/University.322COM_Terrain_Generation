@@ -10,6 +10,8 @@
 //#include <GL/glext.h>
 #pragma comment(lib, "glew32.lib") 
 
+#include "getbmp.h"
+
 using namespace std;
 using namespace glm;
 
@@ -27,6 +29,7 @@ struct Vertex
 {
 	glm::vec4 coords;
 	glm::vec3 normals;
+	glm::vec2 texcoords;
 };
 
 struct Matrix4x4
@@ -95,6 +98,8 @@ const int verticesPerStrip = 2 * MAP_SIZE;
 
 unsigned int terrainIndexData[numStripsRequired][verticesPerStrip];
 
+
+
 static unsigned int
 programId,
 vertexShaderId,
@@ -102,8 +107,14 @@ fragmentShaderId,
 modelViewMatLoc,
 normalMatLoc,
 projMatLoc,
-buffer[1],
-vao[1];
+buffer[1],     // VBO
+vao[1];       // VAO
+
+
+static BitMapFile* image[1];
+static unsigned int
+texture[1], // Array of texture ids.
+grassTexLoc;
 #pragma endregion
 
 
@@ -331,10 +342,6 @@ void setup(void)
 			terrainVertices[index1].normals = norVec + terrainVertices[index1].normals;
 			terrainVertices[index2].normals = norVec + terrainVertices[index2].normals;
 			terrainVertices[index3].normals = norVec + terrainVertices[index3].normals;
-
-			//terrainVertices[index1].normals = norVec;
-			//terrainVertices[index2].normals = norVec;
-			//terrainVertices[index3].normals = norVec;
 		}
 	}
 
@@ -347,6 +354,23 @@ void setup(void)
 		ttVec = terrainVertices[i].normals;
 		norVec = normalize(ttVec);
 		terrainVertices[i].normals = norVec;
+	}
+
+	// generate Texture co-ordinates
+	//Calculate Scale
+	float fTextureS = float(MAP_SIZE) * 0.05f;
+	float fTextureT = float(MAP_SIZE) * 0.05f;
+	i = 0;
+	for (int y = 0; y < MAP_SIZE; y++)
+	{
+		for (int x = 0; x < MAP_SIZE; x++)
+		{
+			// normalize
+			float fScaleC = float(x) / float(MAP_SIZE - 1);
+			float fScaleR = float(x) / float(MAP_SIZE - 1);
+			terrainVertices[i].texcoords = glm::vec2(fTextureS * fScaleC, fTextureT * fScaleR); // send to texturecoordinates
+			i++;
+		}
 	}
 
 	glClearColor(1.0, 1.0, 1.0, 0.0);
@@ -398,6 +422,25 @@ void setup(void)
 	glUniform4fv(glGetUniformLocation(programId, "light0.coords"), 1,
 		&light0.coords[0]);
 
+
+	// Load the image.
+	image[0] = getbmp("./Textures/grass.bmp");
+	// Create texture id.
+	glGenTextures(1, texture);
+	// Bind grass image.
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->sizeX, image[0]->sizeY, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	grassTexLoc = glGetUniformLocation(programId, "grassTex"); // sending to shader
+	glUniform1i(grassTexLoc, 0);
+
+
+
 	// Create vertex array object (VAO) and vertex buffer object (VBO) and associate data with vertex shader.
 	glGenVertexArrays(1, vao);
 	glGenBuffers(1, buffer);
@@ -407,8 +450,14 @@ void setup(void)
 
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(terrainVertices[0]), 0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(terrainVertices[0]), (GLvoid*)sizeof(terrainVertices[0].normals));
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(terrainVertices[0]), (GLvoid*)sizeof(terrainVertices[0].coords));
 	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(terrainVertices[0]),
+		(GLvoid*)(sizeof(terrainVertices[0].coords) + sizeof(terrainVertices[0].normals)));
+	glEnableVertexAttribArray(2);
+
 
 	// Obtain projection matrix uniform location and set value.
 	projMatLoc = glGetUniformLocation(programId, "projMat");
