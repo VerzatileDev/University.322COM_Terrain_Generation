@@ -108,7 +108,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>.\freeglut\lib;.\glew-2.1.0\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lib/freeglut.lib;lib/glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lib/soil.lib;lib/freeglut.lib;lib/glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
