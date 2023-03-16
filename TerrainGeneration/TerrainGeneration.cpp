@@ -79,10 +79,10 @@ static const Material terrainFandB =
 
 static const Light light0 =
 {
-	vec4(0.0, 0.0, 0.0, 1.0),
-	vec4(1.0, 1.0, 1.0, 1.0),
-	vec4(1.0, 1.0, 1.0, 1.0),
-	vec4(1.0, 1.0, 0.0, 0.0)
+	vec4(0.0, 0.0, 0.0, 1.0), // Ambient
+	vec4(1.0, 1.0, 1.0, 1.0), // specular
+	vec4(1.0, 1.0, 1.0, 1.0), // diffuse
+	vec4(0.0, 1.0, 0.0, 0.0) // direction
 };
 
 #pragma endregion
