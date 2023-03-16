@@ -82,7 +82,7 @@ static const Light light0 =
 	vec4(0.0, 0.0, 0.0, 1.0), // Ambient
 	vec4(1.0, 1.0, 1.0, 1.0), // specular
 	vec4(1.0, 1.0, 1.0, 1.0), // diffuse
-	vec4(0.0, 1.0, 0.0, 0.0) // direction
+	vec4(1.0, 1.0, 0.0, 0.0) // direction
 };
 
 #pragma endregion
@@ -472,7 +472,7 @@ void setup(void)
 
 	// Obtain modelview matrix uniform location and set value.
 	mat4 modelViewMat = mat4(1.0);
-	modelViewMat = translate(modelViewMat, vec3(-15.0f, -3.0f, -55.0f)); // <-- TERRAIN IN VIEW.
+	modelViewMat = translate(modelViewMat, vec3(-15.0f, -1.0f, -30.0f)); // <-- TERRAIN IN VIEW.
 	modelViewMatLoc = glGetUniformLocation(programId, "modelViewMat");
 	glUniformMatrix4fv(modelViewMatLoc, 1, GL_FALSE, value_ptr(modelViewMat));
 

@@ -35,8 +35,9 @@ void main(void)
 {
 	normal = normalize(normalExport);
 	lightDirection = normalize(vec3(light0.coords));
-	frontAmbDiffExport = max(dot(normal, lightDirection), 0.0f) * (light0.difCols * terrainFanB.difRefl);
 	fieldTexColor = texture(grassTex, texCoordsExport);
-	//colorsExport = frontAmbDiffExport * fieldTexColor; // prodcuses darkness no idea how to fix.
-	colorsExport = fieldTexColor;
+	frontAmbDiffExport = max(dot(normal, lightDirection), 0.0f) * fieldTexColor;// * (light0.difCols * terrainFanB.difRefl);
+
+	colorsExport = frontAmbDiffExport; // * fieldTexColor; // prodcuses darkness no idea how to fix.
+	//colorsExport = fieldTexColor;
 }
