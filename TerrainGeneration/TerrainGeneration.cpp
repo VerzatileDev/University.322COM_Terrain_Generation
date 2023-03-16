@@ -19,7 +19,7 @@ using namespace glm;
 // Size of the terrain STEP 2 Stuff
 const int MAP_SIZE = 33;
 
-const int SCREEN_WIDTH = 1000;
+const int SCREEN_WIDTH = 500;
 const int SCREEN_HEIGHT = 500;
 
 static const vec4 globAmb = vec4(0.2, 0.2, 0.2, 1.0);
@@ -357,14 +357,16 @@ void setup(void)
 	}
 
 	// generate Texture co-ordinates
-	//Calculate Scale
-	float fTextureS = float(MAP_SIZE) * 0.05f;
-	float fTextureT = float(MAP_SIZE) * 0.05f;
+	// Calculate Scale
+	float fTextureS = float(MAP_SIZE) * 3.05f;
+	float fTextureT = float(MAP_SIZE) * 3.05f;
 	i = 0;
 	for (int y = 0; y < MAP_SIZE; y++)
 	{
 		for (int x = 0; x < MAP_SIZE; x++)
 		{
+			terrainVertices[i].coords = { (float)x, terrain[x][y], (float)y,1.0 };
+
 			// normalize
 			float fScaleC = float(x) / float(MAP_SIZE - 1);
 			float fScaleR = float(x) / float(MAP_SIZE - 1);
@@ -434,12 +436,14 @@ void setup(void)
 		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	grassTexLoc = glGetUniformLocation(programId, "grassTex"); // sending to shader
 	glUniform1i(grassTexLoc, 0);
-
-
 
 	// Create vertex array object (VAO) and vertex buffer object (VBO) and associate data with vertex shader.
 	glGenVertexArrays(1, vao);

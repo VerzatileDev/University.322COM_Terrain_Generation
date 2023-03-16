@@ -29,13 +29,14 @@ struct Material
 uniform Material terrainFanB;
 
 vec3 normal, lightDirection;
-vec4 fAndBDif, fieldTexColor;
+vec4 frontAmbDiffExport, fieldTexColor;
 
 void main(void)
 {
 	normal = normalize(normalExport);
 	lightDirection = normalize(vec3(light0.coords));
-	fAndBDif = max(dot(normal, lightDirection), 0.0f) * (light0.difCols * terrainFanB.difRefl);
+	frontAmbDiffExport = max(dot(normal, lightDirection), 0.0f) * (light0.difCols * terrainFanB.difRefl);
 	fieldTexColor = texture(grassTex, texCoordsExport);
-	colorsExport = fAndBDif* fieldTexColor;
+	//colorsExport = frontAmbDiffExport * fieldTexColor; // prodcuses darkness no idea how to fix.
+	colorsExport = fieldTexColor;
 }
