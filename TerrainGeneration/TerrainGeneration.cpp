@@ -19,6 +19,7 @@ using namespace glm;
 // Size of the terrain STEP 2 Stuff
 const int MAP_SIZE = 33;
 
+
 const int SCREEN_WIDTH = 500;
 const int SCREEN_HEIGHT = 500;
 
@@ -472,7 +473,7 @@ void setup(void)
 
 	// Obtain modelview matrix uniform location and set value.
 	mat4 modelViewMat = mat4(1.0);
-	modelViewMat = translate(modelViewMat, vec3(-15.0f, -1.0f, -30.0f)); // <-- TERRAIN IN VIEW.
+	modelViewMat = translate(modelViewMat, vec3(-15.0f, -1.0f, -40.0f)); // <-- TERRAIN IN VIEW.
 	modelViewMatLoc = glGetUniformLocation(programId, "modelViewMat");
 	glUniformMatrix4fv(modelViewMatLoc, 1, GL_FALSE, value_ptr(modelViewMat));
 
@@ -513,9 +514,43 @@ void keyInput(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
-	case 27:
-		exit(0);
+	case'w':
+	{
+		std::cout << "w" << std::endl;
 		break;
+	}
+	case 's':
+	{
+		std::cout << "s" << std::endl;
+		break;
+	}
+	case 'a':
+	{
+		std::cout << "a" << std::endl;
+		break;
+	}
+	case 'd':
+	{
+		std::cout << "d" << std::endl;
+		break;
+	}
+	case 'e':
+	{
+		std::cout << "e" << std::endl;
+		break;
+	}
+	case 'q':
+	{
+		std::cout << "q" << std::endl;
+		break;
+	}
+	case 27:
+	{
+		exit(0);
+		std::cout << "exit" << std::endl;
+		break;
+	}
+		
 	default:
 		break;
 	}
@@ -544,7 +579,7 @@ int main(int argc, char* argv[])
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(resize);
-	glutKeyboardFunc(keyInput);
+	glutKeyboardFunc(keyInput); // Key Input
 
 	glewExperimental = GL_TRUE;
 	glewInit();
