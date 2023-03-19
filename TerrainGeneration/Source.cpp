@@ -571,7 +571,7 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
 	glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	glutInitWindowPosition(100, 100);
-	glutCreateWindow("TerrainGenerator");
+	glutCreateWindow("Terrain Generation Application Task 2");
 	glEnable(GL_DEPTH_TEST);
 
 	// Set OpenGL to render in wireframe mode
