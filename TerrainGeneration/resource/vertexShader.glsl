@@ -20,6 +20,7 @@ uniform mat3 normalMat;
 
 out vec3 normalExport;
 out vec2 texCoordsExport;
+out float yValue; // 
 
 void main(void)
 {
@@ -27,5 +28,7 @@ void main(void)
    normalExport = normalize(normalMat * normalExport);
    texCoordsExport = terrainTexCoords;
    
+   
    gl_Position = projMat * modelViewMat * terrainCoords;
+   yValue = terrainCoords.y; //
 }

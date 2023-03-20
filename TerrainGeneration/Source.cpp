@@ -10,20 +10,23 @@
 //#include <GL/glext.h>
 #pragma comment(lib, "glew32.lib") 
 
-#include "getbmp.h"
+#include "getbmp.h" // Load Images Data
 
 using namespace std;
 using namespace glm;
 
 #pragma region PROPERTIES
-// Size of the terrain STEP 2 Stuff
+
+// Size of the terrain STEP 2
 const int MAP_SIZE = 33;
 
-
+// Window Properties.
 const int SCREEN_WIDTH = 500;
 const int SCREEN_HEIGHT = 500;
+const int SCREEN_PLACEMENT_X = 100;
+const int SCREEN_PLACEMENT_Y = 300;
 
-static const vec4 globAmb = vec4(0.2, 0.2, 0.2, 1.0);
+static const vec4 globAmb = vec4(0.2, 0.2, 0.2, 1.0); 
 static mat3 normalMat = mat3(1.0);
 
 struct Vertex
@@ -93,10 +96,8 @@ static enum object { TERRAIN };
 
 // Globals
 static Vertex terrainVertices[MAP_SIZE * MAP_SIZE] = {};
-
 const int numStripsRequired = MAP_SIZE - 1; // Step size ?
 const int verticesPerStrip = 2 * MAP_SIZE;
-
 unsigned int terrainIndexData[numStripsRequired][verticesPerStrip];
 
 
@@ -108,14 +109,18 @@ fragmentShaderId,
 modelViewMatLoc,
 normalMatLoc,
 projMatLoc,
-buffer[1],     // VBO
-vao[1];       // VAO
+buffer[2],     // VBO
+vao[2];       // VAO
 
 
-static BitMapFile* image[1];
+static BitMapFile* image[2];
 static unsigned int
-texture[1], // Array of texture ids.
-grassTexLoc;
+texture[2], // Array of texture ids.
+grassTexLoc,
+sandTexLoc,
+objectLoc;
+
+
 #pragma endregion
 
 
@@ -173,8 +178,7 @@ void setup(void)
 			terrain[x][z] = 0;
 		}
 	}
-
-	// TODO: Add your code here to calculate the height values of the terrain using the Diamond square algorithm
+	// Diamond Square
 	terrain[0][0] = h1 * 10.0;
 	terrain[MAP_SIZE - 1][0] = h2 * 10.0;
 	terrain[MAP_SIZE - 1][MAP_SIZE - 1] = h3 * 10.0;
@@ -208,7 +212,7 @@ void setup(void)
 				//square_step(x, y)
 				count = 0;
 				h1 = terrain[x][y];  count++;
-				h2 = terrain[x][y + step_size];  count++; //below
+				h2 = terrain[x][y + step_size];  count++;
 				if ((x - step_size / 2) >= 0) { h3 = terrain[x - step_size / 2][y + step_size / 2]; count++; }
 				else { h3 = 0.0; }
 				if ((x + step_size / 2) < MAP_SIZE) { h4 = terrain[x + step_size / 2][y + step_size / 2]; count++; }
@@ -221,7 +225,7 @@ void setup(void)
 				//second one
 				count = 0;
 				h1 = terrain[x][y];  count++;
-				h2 = terrain[x + step_size][y];  count++; //below
+				h2 = terrain[x + step_size][y];  count++;
 				if ((y - step_size / 2) >= 0) { h3 = terrain[x + step_size / 2][y - step_size / 2]; count++; }
 				else { h3 = 0.0; }
 				if ((y + step_size / 2) < MAP_SIZE) { h4 = terrain[x + step_size / 2][y + step_size / 2]; count++; }
@@ -234,7 +238,7 @@ void setup(void)
 				//third one
 				count = 0;
 				h1 = terrain[x + step_size][y];  count++;
-				h2 = terrain[x + step_size][y + step_size];  count++; //below
+				h2 = terrain[x + step_size][y + step_size];  count++;
 				h3 = terrain[x + step_size / 2][y + step_size / 2]; count++;
 				if ((x + 3 * step_size / 2) < MAP_SIZE) { h4 = terrain[x + 3 * step_size / 2][y + step_size / 2]; count++; }
 				else { h4 = 0.0; }
@@ -246,7 +250,7 @@ void setup(void)
 				//fourth one
 				count = 0;
 				h1 = terrain[x][y + step_size];  count++;
-				h2 = terrain[x + step_size][y + step_size];  count++; //below
+				h2 = terrain[x + step_size][y + step_size];  count++;
 				h3 = terrain[x + step_size / 2][y + step_size / 2]; count++;
 				if ((y + 3 * step_size / 2) < MAP_SIZE) { h4 = terrain[x + step_size / 2][y + 3 * step_size / 2]; count++; }
 				else { h4 = 0.0; }
@@ -366,10 +370,10 @@ void setup(void)
 	{
 		for (int x = 0; x < MAP_SIZE; x++)
 		{
-			terrainVertices[i].coords = { (float)x, terrain[x][y], (float)y,1.0 };
+			//terrainVertices[i].coords = { (float)x, terrain[x][y], (float)y,1.0 }; // No idea what this was
 
 			// normalize
-			float fScaleC = float(x) / float(MAP_SIZE - 1);
+			float fScaleC = float(x) / float(MAP_SIZE - 1); // Devided by mapSize to become normalized
 			float fScaleR = float(x) / float(MAP_SIZE - 1);
 			terrainVertices[i].texcoords = glm::vec2(fTextureS * fScaleC, fTextureT * fScaleR); // send to texturecoordinates
 			i++;
@@ -426,25 +430,40 @@ void setup(void)
 		&light0.coords[0]);
 
 
-	// Load the image.
-	image[0] = getbmp("./Textures/grass.bmp");
-	// Create texture id.
-	glGenTextures(1, texture);
-	// Bind grass image.
-	glActiveTexture(GL_TEXTURE0);
+	// LOAD IMAGE 1
+
+	image[0] = getbmp("./Textures/grass.bmp");									// Load image file Data
+	image[1] = getbmp("./Textures/sand.bmp");									// Load image file Data
+	glGenTextures(2, texture);													// Create texture id.
+
+
+	glActiveTexture(GL_TEXTURE0); 												// Bind grass image.
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->sizeX, image[0]->sizeY, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);
+		GL_RGBA, GL_UNSIGNED_BYTE, image[0]->data);								// Convert Data of the image
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// Parameters for MipMaps and Generate
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);			// Image filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	grassTexLoc = glGetUniformLocation(programId, "grassTex"); // sending to shader
-	glUniform1i(grassTexLoc, 0);
+	grassTexLoc = glGetUniformLocation(programId, "grassTex");					
+	glUniform1i(grassTexLoc, 0);												// send to shader
+	
+
+	// IMAGE 2
+	glActiveTexture(GL_TEXTURE1);												// Bind grass image.
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[1]->sizeX, image[1]->sizeY, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, image[1]->data);								// Convert Data of the image
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// Parameters for MipMaps and Generate
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);			// Image filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	sandTexLoc = glGetUniformLocation(programId, "sandTex");
+	glUniform1i(sandTexLoc, 1);													// Send to Shader
 
 	// Create vertex array object (VAO) and vertex buffer object (VBO) and associate data with vertex shader.
 	glGenVertexArrays(1, vao);
@@ -485,6 +504,7 @@ void setup(void)
 	// Apparently with Instructions this Increases Efficiency of Cull back faces of the Terrain are not rendered.. (I have no idea what that means, but I will pretend that I do).
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+	glEnable(GL_DEPTH_TEST);
 
 	//GLenum error = glGetError();
 }
@@ -516,32 +536,32 @@ void keyInput(unsigned char key, int x, int y)
 	{
 	case'w':
 	{
-		std::cout << "w" << std::endl;
+		//std::cout << "w" << std::endl;
 		break;
 	}
 	case 's':
 	{
-		std::cout << "s" << std::endl;
+		//std::cout << "s" << std::endl;
 		break;
 	}
 	case 'a':
 	{
-		std::cout << "a" << std::endl;
+		//std::cout << "a" << std::endl;
 		break;
 	}
 	case 'd':
 	{
-		std::cout << "d" << std::endl;
+		//std::cout << "d" << std::endl;
 		break;
 	}
 	case 'e':
 	{
-		std::cout << "e" << std::endl;
+		//std::cout << "e" << std::endl;
 		break;
 	}
 	case 'q':
 	{
-		std::cout << "q" << std::endl;
+		//std::cout << "q" << std::endl;
 		break;
 	}
 	case 27:
@@ -570,7 +590,7 @@ int main(int argc, char* argv[])
 
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
 	glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-	glutInitWindowPosition(100, 100);
+	glutInitWindowPosition(SCREEN_PLACEMENT_X, SCREEN_PLACEMENT_Y);
 	glutCreateWindow("Terrain Generation Application Task 2");
 	glEnable(GL_DEPTH_TEST);
 
