@@ -593,6 +593,11 @@ void animate()
 	glutPostRedisplay(); // Keeps the window active
 }
 
+void timerFunc(int value) {
+	animate();
+	glutTimerFunc(16, timerFunc, 0); // call the timer function again after 16 milliseconds
+}
+
 // OpenGL window reshape routine.
 void resize(int w, int h)
 {
@@ -602,7 +607,7 @@ void resize(int w, int h)
 void KeyInputDown(unsigned char key, int x, int y)
 {
 	KeyBoardFunctions::keys[key] = true;
-	std::cout << "Key pressed: " << key << " : " << KeyBoardFunctions::keys[key] << std::endl;
+	//std::cout << "Key pressed: " << key << " : " << KeyBoardFunctions::keys[key] << std::endl;
 
 	switch (key)
 	{
@@ -630,13 +635,13 @@ void KeyInputDown(unsigned char key, int x, int y)
 void KeyInputUp(unsigned char key, int x, int y)
 {
 	KeyBoardFunctions::keys[key] = false;
-	std::cout << "Key de-pressed: " << key << " : " << KeyBoardFunctions::keys[key] << std::endl;
+	//std::cout << "Key de-pressed: " << key << " : " << KeyBoardFunctions::keys[key] << std::endl;
 }
 
 void SpecialKeyInputDown(int key, int x, int y)
 {
 	KeyBoardFunctions::specialKeys[key] = true;
-	std::cout << "Special key pressed: " << key << " : " << KeyBoardFunctions::specialKeys[key] << std::endl;
+	//std::cout << "Special key pressed: " << key << " : " << KeyBoardFunctions::specialKeys[key] << std::endl;
 
 	// CAMERA LOOK AT FUNCTIONS
 	if (key == GLUT_KEY_LEFT)
@@ -665,7 +670,7 @@ void SpecialKeyInputDown(int key, int x, int y)
 void SpecialKeyInputUp(int key, int x, int y)
 {
 	KeyBoardFunctions::specialKeys[key] = false;
-	std::cout << "Special key de-pressed: " << key << " : " << KeyBoardFunctions::specialKeys[key] << std::endl;
+	//std::cout << "Special key de-pressed: " << key << " : " << KeyBoardFunctions::specialKeys[key] << std::endl;
 }
 
 // Main routine.
@@ -691,6 +696,8 @@ int main(int argc, char* argv[])
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(resize);
+
+	glutTimerFunc(0, timerFunc, 0); // start the timer function
 	glutIdleFunc(animate); /// KEEPS WINDOW ACTIVE
 	glutKeyboardFunc(KeyInputDown);
 	glutKeyboardUpFunc(KeyInputUp);
