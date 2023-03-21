@@ -128,9 +128,15 @@ float d = 0.0; //Camera position sideways
 float w = 0.0; //Camera position up down
 float s = 0.0; //Camera position up down
 
-float camPosX = 0.0f;
-float camPosY = 10.0f;
-float camPosZ = 15.0f;
+//float camPosX = 0.0f;
+//float camPosY = 10.0f;
+//float camPosZ = 15.0f;
+
+
+static vec3 eye = vec3(0.0, 10.0, 15.0);
+static vec3 cen = vec3(0.0, 10.0, 0.0);
+float zVal = 0; // Z Co-ordinates of the ball.
+float xVal = 0; // X Co-ordinates of the hover.
 
 #pragma endregion
 
@@ -521,7 +527,7 @@ void setup(void)
 
 	// model view matrix
 	mat4 modelViewMat = mat4(1.0);
-	modelViewMat = lookAt(vec3(camPosX, camPosY, camPosZ), vec3(0.0, 10.0, 0.0), vec3(0.0, 1.0, 0.0));
+	modelViewMat = lookAt(eye, cen, vec3(0.0, 1.0, 0.0));
 	modelViewMat = translate(modelViewMat, vec3(-15.0f, -1.0f, -40.0f)); // <-- TERRAIN IN VIEW.  Translate updates camera location
 	
 
@@ -551,7 +557,7 @@ void drawScene(void)
 
 
 	// Calculate the new camera position
-	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(camPosX, camPosY, camPosZ), glm::vec3(0.0f + d, 10.0f + w, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Position of the camera, Camera looking at, Up vector (Defines which point is up down as I understand it)
+	glm::mat4 viewMatrix = glm::lookAt(eye, cen, glm::vec3(0.0f, 1.0f, 0.0f)); // Position of the camera, Camera looking at, Up vector (Defines which point is up down as I understand it)
 	viewMatrix = glm::translate(viewMatrix, glm::vec3(-15.0f, -1.0f, -40.0f));
 
 	// Set the model-view matrix
@@ -577,6 +583,16 @@ void drawScene(void)
 	glFlush();
 }
 
+void animate() 
+{
+
+	
+	cen = vec3(xVal + d, 0 + w, zVal);
+	eye = vec3(xVal, 7.0, zVal + 15.0);
+
+	glutPostRedisplay(); // Keeps the window active
+}
+
 // OpenGL window reshape routine.
 void resize(int w, int h)
 {
@@ -594,23 +610,18 @@ void KeyInputDown(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case 'w':
-		camPosZ -= 0.1f;
+		zVal -= 0.5f;
 		break;
 	case 's':
-		camPosZ += 0.1f;
+		zVal += 0.5f;
 		break;
 	case 'a':
-		camPosX += 0.5f;
+		xVal -= 0.5f;
 		break;
 	case 'd':
-		camPosX -= 0.5f;
+		xVal += 0.5f;
 		break;
-	case 'q':
-		camPosY -= 0.1f;
-		break;
-	case 'e':
-		camPosY += 0.1f;
-		break;
+	
 	default:
 		break;
 	}
@@ -680,6 +691,7 @@ int main(int argc, char* argv[])
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(resize);
+	glutIdleFunc(animate); /// KEEPS WINDOW ACTIVE
 	glutKeyboardFunc(KeyInputDown);
 	glutKeyboardUpFunc(KeyInputUp);
 	glutSpecialFunc(SpecialKeyInputDown);
