@@ -11,6 +11,7 @@
 #pragma comment(lib, "glew32.lib") 
 
 #include "getbmp.h" // Load Images Data
+#include "KeyBoardFunctions.h"
 
 using namespace std;
 using namespace glm;
@@ -27,7 +28,9 @@ const int SCREEN_PLACEMENT_X = 100;
 const int SCREEN_PLACEMENT_Y = 300;
 
 static const vec4 globAmb = vec4(0.2, 0.2, 0.2, 1.0); 
-static mat3 normalMat = mat3(1.0);
+static mat4 modelViewMat = mat4(1.0);
+static mat4 projMat = mat4(1.0);
+static mat3 normalMat = mat3(1.0);  ///create normal matrix
 
 struct Vertex
 {
@@ -58,7 +61,6 @@ struct Light
 	vec4 coords;
 };
 
-static mat4 projMat = mat4(1.0);
 
 static const Matrix4x4 IDENTITY_MATRIX4x4 =
 {
@@ -121,6 +123,14 @@ sandTexLoc,
 snowTexLoc,
 objectLoc;
 
+// CAMERA PROPRTIES 
+float d = 0.0; //Camera position sideways
+float w = 0.0; //Camera position up down
+float s = 0.0; //Camera position up down
+
+float camPosX = 0.0f;
+float camPosY = 10.0f;
+float camPosZ = 15.0f;
 
 #pragma endregion
 
@@ -509,13 +519,17 @@ void setup(void)
 
 	///////////////////////////////////////
 
-	// Obtain modelview matrix uniform location and set value.
+	// model view matrix
 	mat4 modelViewMat = mat4(1.0);
-	modelViewMat = translate(modelViewMat, vec3(-15.0f, -1.0f, -40.0f)); // <-- TERRAIN IN VIEW.
+	modelViewMat = lookAt(vec3(camPosX, camPosY, camPosZ), vec3(0.0, 10.0, 0.0), vec3(0.0, 1.0, 0.0));
+	modelViewMat = translate(modelViewMat, vec3(-15.0f, -1.0f, -40.0f)); // <-- TERRAIN IN VIEW.  Translate updates camera location
+	
+
+	// Projection Matrix
 	modelViewMatLoc = glGetUniformLocation(programId, "modelViewMat");
 	glUniformMatrix4fv(modelViewMatLoc, 1, GL_FALSE, value_ptr(modelViewMat));
 
-	///////////////////////////////////////
+	// Set Uniform Variable
 	normalMatLoc = glGetUniformLocation(programId, "normalMat");
 	normalMat = transpose(inverse(mat3(modelViewMat)));
 	glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, value_ptr(normalMat));
@@ -536,6 +550,17 @@ void drawScene(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
+	// Calculate the new camera position
+	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(camPosX, camPosY, camPosZ), glm::vec3(0.0f + d, 10.0f + w, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Position of the camera, Camera looking at, Up vector (Defines which point is up down as I understand it)
+	viewMatrix = glm::translate(viewMatrix, glm::vec3(-15.0f, -1.0f, -40.0f));
+
+	// Set the model-view matrix
+	glm::mat4 modelViewMat = viewMatrix;
+	glUniformMatrix4fv(modelViewMatLoc, 1, GL_FALSE, glm::value_ptr(modelViewMat));
+
+	// Calculate and set the normal matrix uniform variable
+	glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(modelViewMat)));
+	glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(normalMat));
 
 	// For each row - draw the triangle strip
 	glUniform1ui(objectLoc, TERRAIN); // send object ID to the shader if object == Terrain
@@ -546,6 +571,9 @@ void drawScene(void)
 		glDrawElements(GL_TRIANGLE_STRIP, verticesPerStrip, GL_UNSIGNED_INT, terrainIndexData[i]);
 	}
 
+	
+
+
 	glFlush();
 }
 
@@ -555,51 +583,78 @@ void resize(int w, int h)
 	glViewport(0, 0, w, h);
 }
 
-// Keyboard input processing routine.
-void keyInput(unsigned char key, int x, int y)
+void KeyInputDown(unsigned char key, int x, int y)
 {
+	KeyBoardFunctions::keys[key] = true;
+	std::cout << "Key pressed: " << key << " : " << KeyBoardFunctions::keys[key] << std::endl;
+
 	switch (key)
 	{
-	case'w':
-	{
-		//std::cout << "w" << std::endl;
-		break;
-	}
-	case 's':
-	{
-		//std::cout << "s" << std::endl;
-		break;
-	}
-	case 'a':
-	{
-		//std::cout << "a" << std::endl;
-		break;
-	}
-	case 'd':
-	{
-		//std::cout << "d" << std::endl;
-		break;
-	}
-	case 'e':
-	{
-		//std::cout << "e" << std::endl;
-		break;
-	}
-	case 'q':
-	{
-		//std::cout << "q" << std::endl;
-		break;
-	}
 	case 27:
-	{
 		exit(0);
-		std::cout << "exit" << std::endl;
 		break;
-	}
-		
+	case 'w':
+		camPosZ -= 0.1f;
+		break;
+	case 's':
+		camPosZ += 0.1f;
+		break;
+	case 'a':
+		camPosX += 0.5f;
+		break;
+	case 'd':
+		camPosX -= 0.5f;
+		break;
+	case 'q':
+		camPosY -= 0.1f;
+		break;
+	case 'e':
+		camPosY += 0.1f;
+		break;
 	default:
 		break;
 	}
+}
+
+void KeyInputUp(unsigned char key, int x, int y)
+{
+	KeyBoardFunctions::keys[key] = false;
+	std::cout << "Key de-pressed: " << key << " : " << KeyBoardFunctions::keys[key] << std::endl;
+}
+
+void SpecialKeyInputDown(int key, int x, int y)
+{
+	KeyBoardFunctions::specialKeys[key] = true;
+	std::cout << "Special key pressed: " << key << " : " << KeyBoardFunctions::specialKeys[key] << std::endl;
+
+	// CAMERA LOOK AT FUNCTIONS
+	if (key == GLUT_KEY_LEFT)
+	{
+		if (d > -50.0) d -= 0.1;
+	}
+	if (key == GLUT_KEY_RIGHT)
+	{
+		if (d < 15.0) d += 0.1;
+	}
+
+	if (key == GLUT_KEY_UP)
+	{
+		if (w  < 50.0) w += 0.1;
+	}
+	if (key == GLUT_KEY_DOWN)
+	{
+		if (w > -15.0) w -= 0.1;
+	}
+
+
+	glutPostRedisplay();
+}
+
+
+void SpecialKeyInputUp(int key, int x, int y)
+{
+	KeyBoardFunctions::specialKeys[key] = false;
+	std::cout << "Special key de-pressed: " << key << " : " << KeyBoardFunctions::specialKeys[key] << std::endl;
 }
 
 // Main routine.
@@ -625,7 +680,10 @@ int main(int argc, char* argv[])
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(resize);
-	glutKeyboardFunc(keyInput); // Key Input
+	glutKeyboardFunc(KeyInputDown);
+	glutKeyboardUpFunc(KeyInputUp);
+	glutSpecialFunc(SpecialKeyInputDown);
+	glutSpecialUpFunc(SpecialKeyInputUp);
 
 	glewExperimental = GL_TRUE;
 	glewInit();
