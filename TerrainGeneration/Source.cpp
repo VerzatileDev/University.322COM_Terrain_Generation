@@ -113,11 +113,12 @@ buffer[2],     // VBO
 vao[2];       // VAO
 
 
-static BitMapFile* image[2];
+static BitMapFile* image[3];
 static unsigned int
-texture[2], // Array of texture ids.
+texture[3], // Array of texture ids.
 grassTexLoc,
 sandTexLoc,
+snowTexLoc,
 objectLoc;
 
 
@@ -434,7 +435,8 @@ void setup(void)
 
 	image[0] = getbmp("./Textures/grass.bmp");									// Load image file Data
 	image[1] = getbmp("./Textures/sand.bmp");									// Load image file Data
-	glGenTextures(2, texture);													// Create texture id.
+	image[2] = getbmp("./Textures/snow.bmp");									// Load image file Data
+	glGenTextures(3, texture);													// Create texture id.
 
 
 	glActiveTexture(GL_TEXTURE0); 												// Bind grass image.
@@ -464,6 +466,23 @@ void setup(void)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	sandTexLoc = glGetUniformLocation(programId, "sandTex");
 	glUniform1i(sandTexLoc, 1);													// Send to Shader
+
+
+	// IMAGE 3
+	glActiveTexture(GL_TEXTURE2);												// Bind grass image.
+	glBindTexture(GL_TEXTURE_2D, texture[2]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[2]->sizeX, image[2]->sizeY, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, image[2]->data);								// Convert Data of the image
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// Parameters for MipMaps and Generate
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);			// Image filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	snowTexLoc = glGetUniformLocation(programId, "snowTex");
+	glUniform1i(snowTexLoc, 2);													// Send to Shader
+
+
 
 	// Create vertex array object (VAO) and vertex buffer object (VBO) and associate data with vertex shader.
 	glGenVertexArrays(1, vao);
@@ -501,6 +520,8 @@ void setup(void)
 	normalMat = transpose(inverse(mat3(modelViewMat)));
 	glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, value_ptr(normalMat));
 
+	objectLoc = glGetUniformLocation(programId, "object");  //uniform uint object;
+
 	// Apparently with Instructions this Increases Efficiency of Cull back faces of the Terrain are not rendered.. (I have no idea what that means, but I will pretend that I do).
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -514,9 +535,14 @@ void drawScene(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+
 	// For each row - draw the triangle strip
+	glUniform1ui(objectLoc, TERRAIN); // send object ID to the shader if object == Terrain
+	glBindVertexArray(vao[TERRAIN]);
 	for (int i = 0; i < MAP_SIZE - 1; i++)
 	{
+		
 		glDrawElements(GL_TRIANGLE_STRIP, verticesPerStrip, GL_UNSIGNED_INT, terrainIndexData[i]);
 	}
 

@@ -1,5 +1,8 @@
 #version 430 core
 
+#define TERRAIN 0
+#define BACKGROUND 1
+
 in vec3 normalExport;
 in vec2 texCoordsExport; // Vertex texture coordinates 
 in float yValue;
@@ -15,11 +18,11 @@ struct Light
 };
 
 float maxRange = 27.0f;
-float upRange = 20.0f;
+float upRange = 1.0f;
 float downRange = -6.0f;
 
-float blendFactor = 1.5f;
-float blendRange = 0.5f;
+float blendFactor = 0.5f;
+float blendRange = 1.0f;
 
 
 //Lighting
@@ -29,6 +32,8 @@ uniform vec4 globAmb;
 // Takes from send to shader Textures ( See Load Image Parts 1, 2)
 uniform sampler2D grassTex; // Texture Unit 0
 uniform sampler2D sandTex;	// Texture Unit 1
+uniform sampler2D snowTex;	// Texture Unit 2
+
 uniform uint object;        // Tells shader the object currently being processed
 
 struct Material
@@ -43,51 +48,60 @@ struct Material
 uniform Material terrainFanB;
 
 vec3 normal, lightDirection;
-vec4 frontAmbDiffExport, fieldTexColor, sandTexColor;
+vec4 frontAmbDiffExport, fieldTexColor, sandTexColor, snowTexColor;
 
 void main(void)
 {
 	fieldTexColor = texture(grassTex, texCoordsExport);
 	sandTexColor = texture(sandTex, texCoordsExport); // vec4(1.0, 1.0, 1.0, 1.0) Here to Test The workings of it
+	snowTexColor = texture(snowTex, texCoordsExport);
 	vec4 texColor;
 	
-
-	if(yValue < downRange ) // Bottom Half
-	{ 
-		texColor = sandTexColor; 
-	}
-	else if(yValue > downRange - blendRange && yValue < downRange + blendRange) // Blending area
-	{ 
-		texColor = mix(sandTexColor, fieldTexColor, blendFactor); 
-	}
-	else if (yValue > downRange && yValue < upRange) // Top Half
+	if( object == TERRAIN )
 	{
-		texColor = fieldTexColor; 
-	}
-	//else if (yValue > upRange - blendRange && yValue < upRange + blendRange) // Since we do not have Rock at the moment Avoid this
-	//{ 
-	//	texColor = mix(fieldTexColor, sandTexColor, blendFactor);
-	//} // Sand should be rock here.
+		if(yValue < downRange ) // Bottom Half
+		{
+			texColor = sandTexColor; 
+		}
+		else if(yValue > downRange - blendRange && yValue < downRange + blendRange) // Blending area
+		{ 
+			texColor = mix(sandTexColor, fieldTexColor, blendFactor); 
+		}
+		else if (yValue > downRange && yValue < upRange) // Top Half
+		{
+			texColor = fieldTexColor; 
+		}
+		else if (yValue > upRange - blendRange && yValue < upRange + blendRange) // Since we do not have Rock at the moment Avoid this
+		{ 
+			texColor = mix(fieldTexColor, snowTexColor, blendFactor);
+		} // Sand should be rock here.
 	
-	else if (yValue >upRange && yValue < maxRange) 
-	{ 
-		texColor = sandTexColor; 
-	}
+		else if (yValue > upRange && yValue < maxRange) // Top Hill SNow area
+		{ 
+			texColor = snowTexColor; 
+		}
 	
-	//else if( yValue > maxRange - blendRange && yValue < maxRange + blendRange) // Snow on top of hills.
+		else if( yValue > maxRange - blendRange && yValue < maxRange + blendRange) // Snow on top of hills blending area
+		{
+			texColor = mix(fieldTexColor, snowTexColor, blendFactor);
+		}
+
+		else if(yValue > maxRange) 
+		{ 
+			texColor = snowTexColor; 
+		}
+
+		else  // If no areas fall under the Previous described attach Default
+		{
+			texColor = fieldTexColor;
+		}
+	}
+
+	//if(object == BACKGROUND)
 	//{
-	//	texColor = sandTexColor; 
-	//} // Change later apparently has snow too
+	//	texColor = .. ;
+	//}
 
-	else if(yValue > maxRange) 
-	{ 
-		texColor = sandTexColor; 
-	}
-
-	else  // If no areas fall under the Previous described attach Default
-	{
-		texColor = fieldTexColor;
-	}
 
 
 	normal = normalize(normalExport);
