@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 
 #include "glm/glm.hpp"
@@ -186,8 +186,18 @@ void shaderCompileTest(GLuint shader)
 // Initialization routine.
 void setup(void)
 {
-	float h1, h2, h3, h4, avarage, h;
+	// INFO DISPLAYED
+	std::cout << "The Current Screen Dimensions are:" << std::endl;
+	std::cout << SCREEN_WIDTH<< " Witdh " << SCREEN_HEIGHT << " Height" << std::endl;
+
+	std::cout << "\nThe Usable Buttons are as Follows:" << std::endl;
+	std::cout << "Movement: LEFT / RIGHT -> A / D" << std::endl;
+	std::cout << "Movement: FORWARD / BACKWARD -> W / S" << std::endl;
+	std::cout << "LOOK AROUND: ARROW KEYS UP / DOWN / LEFT / RIGHT" << std::endl;
 	
+	std::cout << "\nThe program follows: Animated Water, Multi-Textured Terrain, Procerudally generated Terrain/ Water, Lights, etc." << std::endl;
+
+	float h1, h2, h3, h4, avarage, h;
 	///Generate random numbers ///
 	srand(3); //Seed
 	h1 = (rand() % 10) / 5.0 - 1.0;
@@ -437,7 +447,7 @@ void setup(void)
 	glShaderSource(vertexShaderId, 1, (const char**)&vertexShader, NULL);
 	glCompileShader(vertexShaderId);
 	// Test for vertex shader compilation errors
-	std::cout << "VERTEX::" << std::endl;
+	//std::cout << "VERTEX::" << std::endl;
 	shaderCompileTest(vertexShaderId); // Error Testing Will Display if there are issues
 
 	char* fragmentShader = readTextFile("./resource/fragmentShader.glsl");
@@ -445,7 +455,7 @@ void setup(void)
 	glShaderSource(fragmentShaderId, 1, (const char**)&fragmentShader, NULL);
 	glCompileShader(fragmentShaderId);
 	// Test for vertex shader compilation errors
-	std::cout << "FRAGMENT::" << std::endl;
+	//std::cout << "FRAGMENT::" << std::endl;
 	shaderCompileTest(vertexShaderId);
 
 	programId = glCreateProgram();
