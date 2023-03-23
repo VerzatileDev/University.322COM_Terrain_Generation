@@ -4,10 +4,10 @@
 #include "glm/glm.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+//#include <chrono> // Time Tracking
 #include <GLEWLIB/GL/glew.h>
 #include <freeglut/GL/freeglut.h>
 #include <vector>
-//#include <GL/glext.h>
 #pragma comment(lib, "glew32.lib") 
 
 #include "getbmp.h" // Load Images Data
@@ -22,10 +22,12 @@ using namespace glm;
 const int MAP_SIZE = 33;
 
 // Window Properties.
-const int SCREEN_WIDTH = 500;
-const int SCREEN_HEIGHT = 500;
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 800;
 const int SCREEN_PLACEMENT_X = 100;
 const int SCREEN_PLACEMENT_Y = 300;
+
+//std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> programStartTime;
 
 static const vec4 globAmb = vec4(0.2, 0.2, 0.2, 1.0); 
 static mat4 modelViewMat = mat4(1.0);
@@ -38,6 +40,8 @@ struct Vertex
 	glm::vec3 normals;
 	glm::vec2 texcoords;
 };
+
+
 
 struct Matrix4x4
 {
@@ -93,15 +97,19 @@ static const Light light0 =
 
 #pragma endregion
 
-static enum buffer { TERRAIN_VERTICES };
-static enum object { TERRAIN };
+static enum buffer { TERRAIN_VERTICES, WATER_VERTICES };
+static enum object { TERRAIN, WATER};
 
-// Globals
+// Terrain
 static Vertex terrainVertices[MAP_SIZE * MAP_SIZE] = {};
 const int numStripsRequired = MAP_SIZE - 1; // Step size ?
 const int verticesPerStrip = 2 * MAP_SIZE;
 unsigned int terrainIndexData[numStripsRequired][verticesPerStrip];
 
+
+// WATER GRID
+static Vertex waterVertices[MAP_SIZE * MAP_SIZE] = {};
+unsigned int waterIndexData[numStripsRequired][verticesPerStrip];
 
 
 static unsigned int
@@ -111,16 +119,17 @@ fragmentShaderId,
 modelViewMatLoc,
 normalMatLoc,
 projMatLoc,
-buffer[2],     // VBO
-vao[2];       // VAO
+buffer[3],     // VBO
+vao[3];       // VAO
 
 
-static BitMapFile* image[3];
+static BitMapFile* image[4];
 static unsigned int
-texture[3], // Array of texture ids.
+texture[4], // Array of texture ids.
 grassTexLoc,
 sandTexLoc,
 snowTexLoc,
+waterTexLoc,
 objectLoc;
 
 // CAMERA PROPRTIES 
@@ -137,6 +146,10 @@ static vec3 eye = vec3(0.0, 10.0, 15.0);
 static vec3 cen = vec3(0.0, 10.0, 0.0);
 float zVal = 0; // Z Co-ordinates of the ball.
 float xVal = 0; // X Co-ordinates of the hover.
+
+
+static float waveTime = 0; // WATER
+
 
 #pragma endregion
 
@@ -187,15 +200,20 @@ void setup(void)
 	// Height Values Initialized to zero
 	// Element  (x, z) of array represents height Y of terrain given point.
 	// Data stored in multi Array Terrain[x.. 
-	float terrain[MAP_SIZE][MAP_SIZE] = {};
+	float terrain[MAP_SIZE][MAP_SIZE] = {}; // TERRAIN
+	float water[MAP_SIZE][MAP_SIZE] = {}; // WATER
+
 	for (int x = 0; x < MAP_SIZE; x++)
 	{
 		for (int z = 0; z < MAP_SIZE; z++)
 		{
 			terrain[x][z] = 0;
+			water[x][z] = -8; // WATER HEIGHT
 		}
 	}
-	// Diamond Square
+
+
+	// Diamond Square FOR TERRAIN
 	terrain[0][0] = h1 * 10.0;
 	terrain[MAP_SIZE - 1][0] = h2 * 10.0;
 	terrain[MAP_SIZE - 1][MAP_SIZE - 1] = h3 * 10.0;
@@ -294,12 +312,22 @@ void setup(void)
 			terrainVertices[i].coords.x = (float)x;
 			terrainVertices[i].coords.y = terrain[x][z];
 			terrainVertices[i].coords.z = (float)z;
-			terrainVertices[i].coords.w = 1.0;
+			terrainVertices[i].coords.w = 1.0; // I have no idea what this is, but do not touch it
 
 			terrainVertices[i].normals.x = 0.0;
 			terrainVertices[i].normals.y = 0.0;
 			terrainVertices[i].normals.z = 0.0;
 
+			// y value is the height value (set to 0.0) // second part is color value
+			//waterVertices[i] = { { (float)x, 0.0, (float)z, 1.0 }, { 0.0, 0.0, 0.0, 1.0 } }; // WATER
+			waterVertices[i].coords.x = (float)x;
+			waterVertices[i].coords.y = water[x][z];
+			waterVertices[i].coords.z = (float)z;
+			waterVertices[i].coords.w = 1.0;
+
+			waterVertices[i].normals.x = 0.0;
+			waterVertices[i].normals.y = 0.0;
+			waterVertices[i].normals.z = 0.0;
 			i++;
 		}
 	}
@@ -314,11 +342,13 @@ void setup(void)
 		for (int x = 0; x < MAP_SIZE * 2; x += 2)
 		{
 			terrainIndexData[z][x] = i;
+			waterIndexData[z][x] = i; // WATER
 			i++;
 		}
 		for (int x = 1; x < MAP_SIZE * 2 + 1; x += 2)
 		{
 			terrainIndexData[z][x] = i;
+			waterIndexData[z][x] = i; // WATER
 			i++;
 		}
 	}
@@ -393,12 +423,14 @@ void setup(void)
 			float fScaleC = float(x) / float(MAP_SIZE - 1); // Devided by mapSize to become normalized
 			float fScaleR = float(x) / float(MAP_SIZE - 1);
 			terrainVertices[i].texcoords = glm::vec2(fTextureS * fScaleC, fTextureT * fScaleR); // send to texturecoordinates
+			waterVertices[i].texcoords = glm::vec2(fTextureS * fScaleC, fTextureT * fScaleR);
 			i++;
 		}
 	}
 
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 
+#pragma region hide
 	// Create shader program executable - read, compile and link shaders
 	char* vertexShader = readTextFile("./resource/vertexShader.glsl");
 	vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
@@ -421,9 +453,7 @@ void setup(void)
 	glAttachShader(programId, fragmentShaderId);
 	glLinkProgram(programId);
 	glUseProgram(programId);
-	///////////////////////////////////////
 
-	////Add for workshop 7
 	glUniform4fv(glGetUniformLocation(programId, "terrainFandB.ambRefl"), 1,
 		&terrainFandB.ambRefl[0]);
 	glUniform4fv(glGetUniformLocation(programId, "terrainFandB.difRefl"), 1,
@@ -445,16 +475,15 @@ void setup(void)
 		&light0.specCols[0]);
 	glUniform4fv(glGetUniformLocation(programId, "light0.coords"), 1,
 		&light0.coords[0]);
-
-
-	// LOAD IMAGE 1
+#pragma endregion
 
 	image[0] = getbmp("./Textures/grass.bmp");									// Load image file Data
 	image[1] = getbmp("./Textures/sand.bmp");									// Load image file Data
 	image[2] = getbmp("./Textures/snow.bmp");									// Load image file Data
-	glGenTextures(3, texture);													// Create texture id.
+	image[3] = getbmp("./Textures/SkyboxBottom.bmp");							// Load image file Data
+	glGenTextures(4, texture);													// Create texture id.
 
-
+	// LOAD IMAGE 1
 	glActiveTexture(GL_TEXTURE0); 												// Bind grass image.
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[0]->sizeX, image[0]->sizeY, 0,
@@ -498,11 +527,25 @@ void setup(void)
 	snowTexLoc = glGetUniformLocation(programId, "snowTex");
 	glUniform1i(snowTexLoc, 2);													// Send to Shader
 
+	// IMAGE 4
+	glActiveTexture(GL_TEXTURE3);												// Bind grass image.
+	glBindTexture(GL_TEXTURE_2D, texture[3]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image[3]->sizeX, image[3]->sizeY, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, image[3]->data);								// Convert Data of the image
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// Parameters for MipMaps and Generate
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);			// Image filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	waterTexLoc = glGetUniformLocation(programId, "waterTex");
+	glUniform1i(waterTexLoc, 3);													// Send to Shader
+
 
 
 	// Create vertex array object (VAO) and vertex buffer object (VBO) and associate data with vertex shader.
-	glGenVertexArrays(1, vao);
-	glGenBuffers(1, buffer);
+	glGenVertexArrays(3, vao);
+	glGenBuffers(3, buffer);
 	glBindVertexArray(vao[TERRAIN]);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer[TERRAIN_VERTICES]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(terrainVertices), terrainVertices, GL_STATIC_DRAW);
@@ -516,6 +559,23 @@ void setup(void)
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(terrainVertices[0]),
 		(GLvoid*)(sizeof(terrainVertices[0].coords) + sizeof(terrainVertices[0].normals)));
 	glEnableVertexAttribArray(2);
+
+
+	//WATER Hopefully
+	//glGenVertexArrays(2, vao);
+	//glGenBuffers(2, buffer);
+	glBindVertexArray(vao[WATER]);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer[WATER_VERTICES]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(waterVertices), waterVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(waterVertices[0]), 0);
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(waterVertices[0]), (GLvoid*)sizeof(waterVertices[0].coords));
+	glEnableVertexAttribArray(4);
+
+	glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(terrainVertices[0]),
+		(GLvoid*)(sizeof(terrainVertices[0].coords) + sizeof(terrainVertices[0].normals)));
+	glEnableVertexAttribArray(5);
 
 
 	// Obtain projection matrix uniform location and set value.
@@ -553,6 +613,7 @@ void setup(void)
 // Drawing routine.
 void drawScene(void)
 {
+	//float curTime = ((std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()) - programStartTime).count()) / 1000.0f;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -577,8 +638,20 @@ void drawScene(void)
 		glDrawElements(GL_TRIANGLE_STRIP, verticesPerStrip, GL_UNSIGNED_INT, terrainIndexData[i]);
 	}
 
-	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glUniform1ui(objectLoc, WATER); // send object ID to the shader if object == WATER
+	glBindVertexArray(vao[WATER]);
+	for (int i = 0; i < MAP_SIZE - 1; i++)
+	{
+		glDrawElements(GL_TRIANGLE_STRIP, verticesPerStrip, GL_UNSIGNED_INT, waterIndexData[i]);
+	}
 
+	waveTime += 0.0001f;
+	glUniform1f(glGetUniformLocation(programId, "waveTime"), waveTime); // veryex shader
+
+	// Disable blending
+	glDisable(GL_BLEND);
 
 	glFlush();
 }
@@ -586,7 +659,7 @@ void drawScene(void)
 void animate() 
 {
 
-	
+	// Camera Related
 	cen = vec3(xVal + d, 0 + w, zVal);
 	eye = vec3(xVal, 7.0, zVal + 15.0);
 
@@ -676,6 +749,7 @@ void SpecialKeyInputUp(int key, int x, int y)
 // Main routine.
 int main(int argc, char* argv[])
 {
+	//programStartTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 	glutInit(&argc, argv);
 
 	// Set the version of OpenGL (4.2)

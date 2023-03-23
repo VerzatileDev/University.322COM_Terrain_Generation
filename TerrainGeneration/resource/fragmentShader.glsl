@@ -1,7 +1,7 @@
 #version 430 core
 
 #define TERRAIN 0
-#define BACKGROUND 1
+#define WATER 1 // ADDED
 
 in vec3 normalExport;
 in vec2 texCoordsExport; // Vertex texture coordinates 
@@ -33,7 +33,7 @@ uniform vec4 globAmb;
 uniform sampler2D grassTex; // Texture Unit 0
 uniform sampler2D sandTex;	// Texture Unit 1
 uniform sampler2D snowTex;	// Texture Unit 2
-
+uniform sampler2D waterTex;	// Texture Unit 3
 uniform uint object;        // Tells shader the object currently being processed
 
 struct Material
@@ -48,13 +48,14 @@ struct Material
 uniform Material terrainFanB;
 
 vec3 normal, lightDirection;
-vec4 frontAmbDiffExport, fieldTexColor, sandTexColor, snowTexColor;
+vec4 frontAmbDiffExport, fieldTexColor, sandTexColor, snowTexColor, waterTexColor;
 
 void main(void)
 {
 	fieldTexColor = texture(grassTex, texCoordsExport);
 	sandTexColor = texture(sandTex, texCoordsExport); // vec4(1.0, 1.0, 1.0, 1.0) Here to Test The workings of it
 	snowTexColor = texture(snowTex, texCoordsExport);
+	waterTexColor = texture(waterTex, texCoordsExport);
 	vec4 texColor;
 	
 	if( object == TERRAIN )
@@ -95,18 +96,18 @@ void main(void)
 		{
 			texColor = fieldTexColor;
 		}
+		normal = normalize(normalExport);
+		lightDirection = normalize(vec3(light0.coords));
+		frontAmbDiffExport = max(dot(normal, lightDirection), 0.0f) * texColor;// * (light0.difCols * terrainFanB.difRefl);
+		//colorsExport = vec4(vec3(min(frontAmbDiffExport, vec4(1.0))), 1.0) * texColor * frontAmbDiffExport;
+		colorsExport = frontAmbDiffExport; // * fieldTexColor;
+		
 	}
 
-	//if(object == BACKGROUND)
-	//{
-	//	texColor = .. ;
-	//}
+	if(object == WATER)
+	{
+		colorsExport = waterTexColor;
+		colorsExport.a = 0.7f; // ALPHA
+	}
 
-
-
-	normal = normalize(normalExport);
-	lightDirection = normalize(vec3(light0.coords));
-	frontAmbDiffExport = max(dot(normal, lightDirection), 0.0f) * texColor;// * (light0.difCols * terrainFanB.difRefl);
-	//colorsExport = vec4(vec3(min(frontAmbDiffExport, vec4(1.0))), 1.0) * texColor * frontAmbDiffExport;
-	colorsExport = frontAmbDiffExport; // * fieldTexColor;
 }
