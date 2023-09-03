@@ -1,14 +1,21 @@
-# 322COM_Task2
+# Table of Contents
 
-<br>
-</br>
+* Introduction
+* Installation
+* Configuration
+* License
 
-## Terrain Generation 322COM Task 2
+---
+
+### Introduction
 
 In this project you will find a Terrain Generation, that displays a procudurally
 generated terrain with image textures attacked to it. Meaning that on height level
 it will showcase grass texture sand or other depending on the area defined.
 It also includes a procedurally generated animated Water!
+
+---
+
 
 Trailer!
 < www.youtube.com/watch?v=bmqeZnhqfaw >
