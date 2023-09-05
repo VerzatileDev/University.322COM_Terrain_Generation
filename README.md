@@ -5,24 +5,22 @@
 * Configuration
 * License
 
----
 
-### Introduction
+# Introduction
 
-In this project you will find a Terrain Generation, that displays a procudurally
-generated terrain with image textures attacked to it. Meaning that on height level
-it will showcase grass texture sand or other depending on the area defined.
-It also includes a procedurally generated animated Water!
+<br>
+</br>
+This project showcases a Terrain Generation system capable of producing procedurally generated terrains. These terrains are enhanced with texture mapping that dynamically adjusts based on the terrain's height, resulting in realistic representations of various landscape features, such as grasslands and sandy areas. Additionally, the project includes a procedurally generated animated water feature for added realism.
 
----
+<br>
+</br>
 
-
-Trailer!
+### Trailer!
 < www.youtube.com/watch?v=bmqeZnhqfaw >
 <br>
 </br>
 
-## Information about the Engine
+### Information about the Engine
 
 * Includes Animated / Procedurally generated Water.
 * Procedurally generated Terrain with Multiple uses of Textures depending on height!
@@ -32,8 +30,15 @@ Trailer!
 <br>
 </br>
 
-## Download Instructions
+# Installation
 
-Coming Soon!
+
+
+# Prerequisites
+
+
+# License
+
+
 
 
