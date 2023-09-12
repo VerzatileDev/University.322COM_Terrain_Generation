@@ -1,34 +1,37 @@
 # Table of Contents
 
-* Introduction
-* Installation
-* Configuration
-* License
+* [Introduction](#introduction)
+     * [Software Information](#software-information)
+     * [Examples](#examples)
+* [Installation](#installation)
+* [Prerequisites](#prerequisites)
+* [License](#license)
 
-<br>
 </br>
 
-# Introduction
+## Introduction
 
 
 This project showcases a Terrain Generation system capable of producing procedurally generated terrains. These terrains are enhanced with texture mapping that dynamically adjusts based on the terrain's height, resulting in realistic representations of various landscape features, such as grasslands and sandy areas. Additionally, the project includes a procedurally generated animated water feature for added realism.
 
+</br>
 
-### Information about the Engine
+### Software Information
 
 * Includes Animated / Procedurally generated Water.
 * Procedurally generated Terrain with Multiple uses of Textures depending on height!
 * 3D movabale camera use AWSD (Move around) and Arrow Keys (To look around).
 * May take some time to load at first, but let it go about it! :)
 
-
-### Trailer
-< www.youtube.com/watch?v=bmqeZnhqfaw >
-
-<br>
 </br>
 
-# Installation
+### Examples
+
+[Trailer](www.youtube.com/watch?v=bmqeZnhqfaw)
+
+</br>
+
+## Installation
 
 1. Download the .zip file ( "< code >" - download .zip )
 2. Unzip the file
@@ -47,10 +50,9 @@ This project showcases a Terrain Generation system capable of producing procedur
 
 6. Run the Project
 
-<br>
 </br>
 
-# Prerequisites
+## Prerequisites
 
 The following project Requires:
 
@@ -58,10 +60,9 @@ The following project Requires:
 2. C++ ( With windows 10 SDK, C++ development prequisites )
 3. Terminal add on ( To run the .exe if required, can be done through visual studio as well! )
 
-<br>
 </br>
 
-# License
+## License
 
 MIT License
 
