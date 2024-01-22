@@ -27,7 +27,7 @@ This project showcases a Terrain Generation system capable of producing procedur
 
 ### Examples
 
-[Trailer](www.youtube.com/watch?v=bmqeZnhqfaw)
+[![Youtube Video Image](https://img.youtube.com/vi/bmqeZnhqfaw/0.jpg)](https://www.youtube.com/watch?v=bmqeZnhqfaw)
 
 </br>
 
